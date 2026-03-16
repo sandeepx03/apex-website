@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX — Know Your Body</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#4CE97A;--yellow:#FFD84D;--red:#FF4757;--blue:#4DA6FF;--purple:#6C63FF;
+  --bg:#000;--s1:#0A0A0A;--s2:#111;--border:rgba(255,255,255,0.07);
+  --text:#fff;--muted:rgba(255,255,255,0.38);--faint:rgba(255,255,255,0.06);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.6;overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 80px;height:64px;background:rgba(0,0,0,0.9);backdrop-filter:blur(24px);border-bottom:0.5px solid var(--border)}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:6px;color:var(--text);text-decoration:none}
+.nav-links{display:flex;gap:40px;align-items:center}
+.nav-links a{color:var(--muted);font-size:12px;letter-spacing:1px;text-decoration:none;transition:color 0.2s;text-transform:uppercase}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{background:var(--text)!important;color:var(--bg)!important;padding:9px 24px!important;border-radius:6px!important;font-weight:500!important;font-size:12px!important;letter-spacing:1px!important}
+
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:80px;padding:120px 80px 80px;max-width:1400px;margin:0 auto}
+.hero-left{display:flex;flex-direction:column;gap:0}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;width:fit-content;background:var(--faint);border:0.5px solid var(--border);border-radius:4px;padding:5px 14px;font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:40px}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,9vw,140px);line-height:0.92;letter-spacing:2px;margin-bottom:32px}
+.hero-title span{color:var(--green)}
+.hero-desc{font-size:16px;color:var(--muted);line-height:1.8;max-width:440px;margin-bottom:48px}
+.hero-form{display:flex;gap:8px;margin-bottom:20px}
+.hero-form input{flex:1;background:var(--s1);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:14px 18px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s}
+.hero-form input:focus{border-color:rgba(255,255,255,0.3)}
+.hero-form input::placeholder{color:var(--muted)}
+.hero-form button{background:var(--green);color:#000;border:none;border-radius:8px;padding:14px 28px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;letter-spacing:0.5px}
+.hero-form button:hover{opacity:0.85}
+.hero-note{font-size:11px;color:var(--muted);letter-spacing:0.3px}
+.hero-success{font-size:13px;color:var(--green);margin-top:12px;display:none}
+
+.hero-right{position:relative}
+.dashboard-mock{background:var(--s1);border:0.5px solid var(--border);border-radius:20px;padding:28px;position:relative;overflow:hidden}
+.dash-glow{position:absolute;top:-60px;right:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(76,233,122,0.08) 0%,transparent 70%);pointer-events:none}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.dash-brand{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;color:var(--text)}
+.dash-battery{font-size:11px;color:var(--muted);background:var(--faint);padding:4px 10px;border-radius:20px}
+.dash-date{font-size:11px;color:var(--muted);text-align:center;margin-bottom:20px;letter-spacing:0.5px}
+
+.dial-section{background:var(--s2);border-radius:16px;padding:24px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center}
+.dial-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:16px;align-self:flex-start}
+.dial-wrap{position:relative;width:160px;height:160px;margin:0 auto}
+.dial-wrap svg{transform:rotate(-135deg)}
+.dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dial-num{font-size:44px;font-weight:500;color:var(--green);line-height:1}
+.dial-tag{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px}
+.dial-stats{display:flex;justify-content:space-around;width:100%;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--border)}
+.dial-stat{text-align:center}
+.dial-stat-val{font-size:13px;font-weight:500;color:var(--text)}
+.dial-stat-label{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px}
+
+.metrics-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.met-card{background:var(--s2);border-radius:12px;padding:16px}
+.met-label{font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:8px}
+.met-val{font-size:22px;font-weight:500}
+.met-unit{font-size:10px;color:var(--muted);margin-left:2px}
+
+.coach-card{background:var(--s2);border-radius:12px;padding:16px;border:0.5px solid rgba(108,99,255,0.2)}
+.coach-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.coach-icon{width:6px;height:6px;border-radius:50%;background:var(--purple)}
+.coach-label{font-size:9px;letter-spacing:2px;color:var(--purple)}
+.coach-text{font-size:12px;color:var(--muted);line-height:1.6}
+
+.logos-bar{border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:28px 80px;display:flex;align-items:center}
+.logos-label{font-size:10px;letter-spacing:2px;color:var(--muted);white-space:nowrap;margin-right:60px}
+.logos-list{display:flex;gap:60px;align-items:center;flex:1;justify-content:space-around}
+.logo-item{font-family:'DM Mono',monospace;font-size:12px;color:rgba(255,255,255,0.2);letter-spacing:2px}
+
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:0.5px solid var(--border)}
+.stat-item{padding:48px 80px;border-right:0.5px solid var(--border)}
+.stat-item:last-child{border-right:none}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:2px;line-height:1}
+.stat-num.green{color:var(--green)}
+.stat-label{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:4px;text-transform:uppercase}
+
+.section{padding:120px 80px;max-width:1400px;margin:0 auto}
+.section-eyebrow{font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:16px;text-transform:uppercase}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,80px);letter-spacing:2px;line-height:1;margin-bottom:0}
+
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:64px;border:0.5px solid var(--border);border-radius:16px;overflow:hidden}
+.how-card{padding:48px 40px;background:var(--s1);border-right:0.5px solid var(--border);transition:background 0.2s}
+.how-card:last-child{border-right:none}
+.how-card:hover{background:var(--s2)}
+.how-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:28px}
+.how-title{font-size:20px;font-weight:500;margin-bottom:12px}
+.how-desc{font-size:14px;color:var(--muted);line-height:1.8}
+
+.metrics-big{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:64px;border:0.5px solid var(--border);border-radius:16px;overflow:hidden}
+.metric-big-card{padding:40px 32px;background:var(--s1);border-right:0.5px solid var(--border);transition:background 0.2s}
+.metric-big-card:last-child{border-right:none}
+.metric-big-card:hover{background:var(--s2)}
+.metric-dot{width:8px;height:8px;border-radius:50%;margin-bottom:24px}
+.metric-big-name{font-size:16px;font-weight:500;margin-bottom:10px}
+.metric-big-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:24px}
+.metric-big-tag{font-family:'DM Mono',monospace;font-size:13px}
+
+.vs-wrap{background:var(--s1);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:100px 80px}
+.vs-inner{max-width:900px;margin:0 auto}
+.vs-table{width:100%;border-collapse:collapse;margin-top:56px}
+.vs-table thead tr{border-bottom:0.5px solid var(--border)}
+.vs-table th{font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:400;padding:0 0 20px;text-align:center;text-transform:uppercase}
+.vs-table th:first-child{text-align:left}
+.vs-table th.apex-col{color:var(--green)}
+.vs-table td{padding:20px 0;border-bottom:0.5px solid var(--border);font-size:14px;color:var(--muted);text-align:center}
+.vs-table td:first-child{text-align:left;color:var(--text)}
+.vs-yes{color:var(--green);font-size:16px}
+.vs-no{color:rgba(255,255,255,0.12);font-size:16px}
+.vs-price{font-family:'DM Mono',monospace;font-size:13px}
+.vs-apex{color:var(--green)!important}
+
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px;max-width:800px}
+.price-card{padding:48px 40px;background:var(--s1);border:0.5px solid var(--border);border-radius:16px;transition:border-color 0.2s}
+.price-card:hover{border-color:rgba(255,255,255,0.15)}
+.price-card.hot{border-color:rgba(76,233,122,0.25);background:var(--s2)}
+.price-pill{display:inline-block;background:rgba(76,233,122,0.1);color:var(--green);font-size:9px;letter-spacing:2px;padding:4px 12px;border-radius:3px;margin-bottom:28px;text-transform:uppercase}
+.price-tier{font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:8px;text-transform:uppercase}
+.price-big{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;letter-spacing:2px}
+.price-big.green{color:var(--green)}
+.price-mo{font-size:14px;color:var(--muted);margin-bottom:24px}
+.price-divider{border:none;border-top:0.5px solid var(--border);margin:24px 0}
+.price-list{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:36px}
+.price-list li{font-size:13px;color:var(--muted);display:flex;gap:12px;align-items:flex-start}
+.price-list li::before{content:'→';color:var(--green);flex-shrink:0;margin-top:1px}
+.price-btn{width:100%;padding:16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:opacity 0.2s}
+.price-btn:hover{opacity:0.8}
+.btn-outline{background:none;color:var(--text);border:0.5px solid rgba(255,255,255,0.2)}
+.btn-fill{background:var(--green);color:#000;border:none}
+
+.cta-section{padding:160px 80px;text-align:center;position:relative;overflow:hidden}
+.cta-glow{position:absolute;bottom:-100px;left:50%;transform:translateX(-50%);width:800px;height:500px;background:radial-gradient(ellipse,rgba(76,233,122,0.05) 0%,transparent 65%);pointer-events:none}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,8vw,120px);letter-spacing:2px;line-height:0.95;margin-bottom:32px}
+.cta-sub{font-size:17px;color:var(--muted);margin-bottom:56px;max-width:480px;margin-left:auto;margin-right:auto}
+.cta-form{display:flex;gap:8px;max-width:440px;margin:0 auto 16px}
+.cta-form input{flex:1;background:var(--s1);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px 20px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s}
+.cta-form input:focus{border-color:rgba(255,255,255,0.3)}
+.cta-form input::placeholder{color:var(--muted)}
+.cta-form button{background:var(--green);color:#000;border:none;border-radius:8px;padding:16px 28px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;letter-spacing:0.5px}
+.cta-form button:hover{opacity:0.85}
+.cta-note{font-size:11px;color:var(--muted);letter-spacing:0.3px;text-align:center}
+.cta-success{font-size:13px;color:var(--green);margin-top:12px;display:none;text-align:center}
+
+footer{border-top:0.5px solid var(--border);padding:40px 80px;display:flex;align-items:center;justify-content:space-between}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:5px;color:var(--muted)}
+.footer-links{display:flex;gap:32px}
+.footer-links a{font-size:11px;color:var(--muted);text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:color 0.2s}
+.footer-links a:hover{color:var(--text)}
+.footer-copy{font-size:11px;color:rgba(255,255,255,0.15);letter-spacing:0.3px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.7s ease both}
+.delay-1{animation-delay:0.1s}
+.delay-2{animation-delay:0.2s}
+.delay-3{animation-delay:0.3s}
+.delay-4{animation-delay:0.4s}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">APEX</a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#metrics">Metrics</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#vs">vs WHOOP</a>
+    <a href="#cta" class="nav-cta">Get early access</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-badge fade-up">
+      <div class="badge-dot"></div>
+      EARLY ACCESS OPEN — INDIA
+    </div>
+    <h1 class="hero-title fade-up delay-1">KNOW<br>YOUR<br><span>BODY.</span></h1>
+    <p class="hero-desc fade-up delay-2">Recovery science built for Indian athletes. Daily HRV scores, sleep staging, skin temperature tracking, and an AI coach — at 1/6th the price of WHOOP.</p>
+    <div class="fade-up delay-3">
+      <div class="hero-form">
+        <input type="email" id="hero-email" placeholder="Enter your email" autocomplete="email"/>
+        <button onclick="signup('hero-email','hero-ok')">Get early access</button>
+      </div>
+      <p class="hero-note">Free during beta &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Ships Q3 2025</p>
+      <p class="hero-success" id="hero-ok">You're on the list. We'll reach out soon.</p>
+    </div>
+  </div>
+
+  <div class="hero-right fade-up delay-4">
+    <div class="dashboard-mock">
+      <div class="dash-glow"></div>
+      <div class="dash-header">
+        <span class="dash-brand">APEX</span>
+        <span class="dash-battery">⚡ 87%</span>
+      </div>
+      <p class="dash-date">MONDAY, MARCH 16</p>
+      <div class="dial-section">
+        <div class="dial-label">● RECOVERY</div>
+        <div class="dial-wrap">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="64" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="9" stroke-linecap="round" stroke-dasharray="302" stroke-dashoffset="0"/>
+            <circle cx="80" cy="80" r="64" fill="none" stroke="#4CE97A" stroke-width="9" stroke-linecap="round" stroke-dasharray="302" stroke-dashoffset="76"/>
+          </svg>
+          <div class="dial-center">
+            <span class="dial-num">74%</span>
+            <span class="dial-tag">OPTIMAL</span>
+          </div>
+        </div>
+        <div class="dial-stats">
+          <div class="dial-stat">
+            <div class="dial-stat-val" style="color:#4CE97A">72ms</div>
+            <div class="dial-stat-label">HRV</div>
+          </div>
+          <div class="dial-stat">
+            <div class="dial-stat-val">58bpm</div>
+            <div class="dial-stat-label">RESTING HR</div>
+          </div>
+          <div class="dial-stat">
+            <div class="dial-stat-val" style="color:#FFD84D">35.6°</div>
+            <div class="dial-stat-label">SKIN TEMP</div>
+          </div>
+        </div>
+      </div>
+      <div class="metrics-row">
+        <div class="met-card">
+          <div class="met-label">SLEEP</div>
+          <div class="met-val" style="color:#4DA6FF">7<span class="met-unit">h</span> 22<span class="met-unit">m</span></div>
+        </div>
+        <div class="met-card">
+          <div class="met-label">SPO2</div>
+          <div class="met-val">98<span class="met-unit">%</span></div>
+        </div>
+      </div>
+      <div class="coach-card">
+        <div class="coach-header">
+          <div class="coach-icon"></div>
+          <span class="coach-label">APEX COACH</span>
+        </div>
+        <div class="coach-text">Sandeep, your nervous system is well-rested today. Push hard in training — this is a green light.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="logos-bar">
+  <span class="logos-label">TRUSTED TECHNOLOGY</span>
+  <div class="logos-list">
+    <span class="logo-item">NORDIC NRF54L15</span>
+    <span class="logo-item">25HZ PPG</span>
+    <span class="logo-item">6 PHOTODIODES</span>
+    <span class="logo-item">CLAUDE AI</span>
+    <span class="logo-item">IP68 WATERPROOF</span>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num green">₹499</div>
+    <div class="stat-label">Per month</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">30+</div>
+    <div class="stat-label">Day battery</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">25Hz</div>
+    <div class="stat-label">PPG sampling</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num green">14</div>
+    <div class="stat-label">Day baseline</div>
+  </div>
+</div>
+
+<section class="section" id="how">
+  <p class="section-eyebrow">How it works</p>
+  <h2 class="section-title">SCIENCE,<br>NOT GUESSWORK.</h2>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">01 — WEAR</div>
+      <div class="how-title">24/7 biometric tracking</div>
+      <div class="how-desc">The APEX band tracks your HRV, resting heart rate, skin temperature, SpO2, and sleep stages continuously — 24 hours a day, even while you sleep.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02 — CALIBRATE</div>
+      <div class="how-title">Your personal baseline</div>
+      <div class="how-desc">APEX spends 14 days learning your unique physiology. Your recovery score is compared to your own baseline — not a population average of strangers.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03 — TRAIN</div>
+      <div class="how-title">Daily coaching decisions</div>
+      <div class="how-desc">Every morning you get a recovery score and an AI coaching message telling you exactly how hard to push today — backed by your real biometric data.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="metrics" style="padding-top:0">
+  <p class="section-eyebrow">What we measure</p>
+  <h2 class="section-title">EVERY METRIC<br>THAT MATTERS.</h2>
+  <div class="metrics-big">
+    <div class="metric-big-card">
+      <div class="metric-dot" style="background:#4CE97A"></div>
+      <div class="metric-big-name">Heart Rate Variability</div>
+      <div class="metric-big-desc">RMSSD calculated from raw PPG at 25Hz. The most clinically validated marker of recovery and nervous system health.</div>
+      <div class="metric-big-tag" style="color:#4CE97A">RMSSD · 25Hz</div>
+    </div>
+    <div class="metric-big-card">
+      <div class="metric-dot" style="background:#4DA6FF"></div>
+      <div class="metric-big-name">Sleep Staging</div>
+      <div class="metric-big-desc">Light, Deep, and REM sleep tracked overnight. A sleep performance score from 0–100% tells you if last night actually recovered you.</div>
+      <div class="metric-big-tag" style="color:#4DA6FF">Light · Deep · REM</div>
+    </div>
+    <div class="metric-big-card">
+      <div class="metric-dot" style="background:#FFD84D"></div>
+      <div class="metric-big-name">Skin Temperature</div>
+      <div class="metric-big-desc">Continuous skin temp monitoring detects illness and inflammation before you feel it. Unique to APEX at this price point in India.</div>
+      <div class="metric-big-tag" style="color:#FFD84D">±0.1°C accuracy</div>
+    </div>
+    <div class="metric-big-card">
+      <div class="metric-dot" style="background:#6C63FF"></div>
+      <div class="metric-big-name">AI Recovery Coach</div>
+      <div class="metric-big-desc">Powered by Claude AI. Analyses all your biometrics and gives you a personalised morning message — and answers any fitness question you have.</div>
+      <div class="metric-big-tag" style="color:#6C63FF">APEX Coach</div>
+    </div>
+  </div>
+</section>
+
+<div class="vs-wrap" id="vs">
+  <div class="vs-inner">
+    <p class="section-eyebrow">APEX vs the rest</p>
+    <h2 class="section-title" style="font-size:clamp(40px,5vw,64px)">WHY APEX<br>FOR INDIA?</h2>
+    <table class="vs-table">
+      <thead>
+        <tr>
+          <th style="text-align:left">Feature</th>
+          <th class="apex-col">APEX</th>
+          <th>WHOOP 5.0</th>
+          <th>Noise / boAt</th>
+          <th>Ultrahuman Ring</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Recovery Score</td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-no">✗</span></td>
+          <td><span class="vs-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>HRV (RMSSD method)</td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-no">✗</span></td>
+          <td><span class="vs-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>Skin Temperature</td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-no">✗</span></td>
+          <td><span class="vs-no">✗</span></td>
+          <td><span class="vs-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>AI Coach</td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-no">✗</span></td>
+          <td><span class="vs-no">✗</span></td>
+        </tr>
+        <tr>
+          <td>Battery life</td>
+          <td class="vs-apex">30+ days</td>
+          <td style="color:var(--muted)">4–5 days</td>
+          <td style="color:var(--muted)">7–10 days</td>
+          <td style="color:var(--muted)">4–6 days</td>
+        </tr>
+        <tr>
+          <td>Device price</td>
+          <td class="vs-price vs-apex">₹5,000</td>
+          <td class="vs-price" style="color:var(--muted)">₹29,000+</td>
+          <td class="vs-price" style="color:var(--muted)">₹3,000</td>
+          <td class="vs-price" style="color:var(--muted)">₹22,000</td>
+        </tr>
+        <tr>
+          <td>Monthly subscription</td>
+          <td class="vs-price vs-apex">₹499</td>
+          <td class="vs-price" style="color:var(--muted)">₹3,200+</td>
+          <td class="vs-price" style="color:var(--muted)">Free</td>
+          <td class="vs-price" style="color:var(--muted)">Free</td>
+        </tr>
+        <tr>
+          <td>Designed for India</td>
+          <td><span class="vs-yes">✓</span></td>
+          <td><span class="vs-no">✗</span></td>
+          <td style="color:var(--muted)">Partly</td>
+          <td style="color:var(--muted)">Partly</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<section class="section" id="pricing">
+  <p class="section-eyebrow">Pricing</p>
+  <h2 class="section-title">SIMPLE<br>AND HONEST.</h2>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">Free</div>
+      <div class="price-big">₹0</div>
+      <div class="price-mo">per month, forever</div>
+      <hr class="price-divider"/>
+      <ul class="price-list">
+        <li>Recovery score daily</li>
+        <li>Heart rate monitoring</li>
+        <li>Sleep duration tracking</li>
+        <li>7-day history</li>
+      </ul>
+      <button class="price-btn btn-outline" onclick="document.getElementById('cta-email').focus()">Get started free</button>
+    </div>
+    <div class="price-card hot">
+      <div class="price-pill">Most popular</div>
+      <div class="price-tier">Premium</div>
+      <div class="price-big green">₹499</div>
+      <div class="price-mo">per month — cancel anytime</div>
+      <hr class="price-divider"/>
+      <ul class="price-list">
+        <li>Everything in Free</li>
+        <li>HRV tracking (RMSSD)</li>
+        <li>Sleep staging — Light, Deep, REM</li>
+        <li>Skin temperature alerts</li>
+        <li>AI Coach — unlimited chat</li>
+        <li>WhatsApp daily digest at 7am</li>
+        <li>90-day trend analysis</li>
+        <li>Personalised 14-day baseline</li>
+      </ul>
+      <button class="price-btn btn-fill" onclick="document.getElementById('cta-email').focus()">Get early access</button>
+    </div>
+  </div>
+</section>
+
+<div class="cta-section" id="cta">
+  <div class="cta-glow"></div>
+  <h2 class="cta-title">READY TO KNOW<br>YOUR BODY?</h2>
+  <p class="cta-sub">Join the waitlist. First 500 users get 3 months premium completely free.</p>
+  <div class="cta-form">
+    <input type="email" id="cta-email" placeholder="your@email.com" autocomplete="email"/>
+    <button onclick="signup('cta-email','cta-ok')">Join waitlist</button>
+  </div>
+  <p class="cta-note">No spam. No credit card. Just early access.</p>
+  <p class="cta-success" id="cta-ok">You're on the list. We'll be in touch.</p>
+</div>
+
+<footer>
+  <span class="footer-logo">APEX</span>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+  <span class="footer-copy">© 2025 APEX · Designed in Hyderabad</span>
+</footer>
+
+<script>
+function signup(inputId, successId) {
+  const input = document.getElementById(inputId);
+  const success = document.getElementById(successId);
+  const email = input.value.trim();
+  if (!email || !email.includes('@')) {
+    input.style.borderColor = 'rgba(255,71,87,0.5)';
+    setTimeout(() => input.style.borderColor = '', 1500);
+    return;
+  }
+  input.value = '';
+  input.parentElement.querySelector('button').style.display = 'none';
+  input.style.display = 'none';
+  success.style.display = 'block';
+  console.log('Signup:', email);
+}
+document.querySelectorAll('input[type=email]').forEach(inp => {
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const btn = inp.parentElement.querySelector('button');
+      if (btn) btn.click();
+    }
+  });
+});
+</script>
+</body>
+</html>
