@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX — Know Your Body</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#3DEB6E;--yellow:#FFD84D;--blue:#4DA6FF;--purple:#7C6FFF;--red:#FF4757;
+  --green-dim:rgba(61,235,110,0.12);--green-glow:rgba(61,235,110,0.06);
+  --bg:#000;--s1:#080808;--s2:#0f0f0f;--s3:#161616;--s4:#1c1c1c;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--border3:rgba(255,255,255,0.18);
+  --text:#f0f0f0;--muted:rgba(255,255,255,0.38);--faint:rgba(255,255,255,0.04);
+  --nav-h:64px;
+  --radius:12px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;font-weight:300;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── NOISE TEXTURE ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.35}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 5vw;background:rgba(0,0,0,0.82);backdrop-filter:blur(32px) saturate(1.8);border-bottom:0.5px solid var(--border)}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:8px;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:10px}
+.nav-logo-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite}
+.nav-links{display:flex;gap:2px;align-items:center}
+.nav-links a{color:var(--muted);font-size:11px;letter-spacing:1px;text-decoration:none;transition:color 0.2s;text-transform:uppercase;padding:7px 14px;border-radius:6px;font-weight:400}
+.nav-links a:hover,.nav-links a.active{color:var(--text)}
+.nav-links a.active{background:var(--faint)}
+.nav-cta{background:var(--green)!important;color:#000!important;font-weight:600!important;padding:8px 20px!important;border-radius:7px!important;letter-spacing:0.5px!important}
+.nav-cta:hover{opacity:0.88!important;color:#000!important}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:1.5px;background:var(--muted);transition:all 0.3s;display:block}
+.mobile-menu{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(0,0,0,0.97);backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border);padding:20px 5vw 28px;z-index:299;flex-direction:column;gap:4px}
+.mobile-menu a{color:var(--muted);font-size:14px;letter-spacing:0.5px;text-decoration:none;text-transform:uppercase;padding:12px 0;border-bottom:0.5px solid var(--border);transition:color 0.2s}
+.mobile-menu a:last-child{border-bottom:none}
+.mobile-menu a:hover{color:var(--text)}
+.mobile-menu.open{display:flex}
+
+/* ── PAGES ── */
+.page{display:none;min-height:100vh;padding-top:var(--nav-h)}
+.page.active{display:block}
+
+/* ── 3D BAND ── */
+.band-scene{perspective:800px;width:260px;height:340px;margin:0 auto}
+.band-3d{width:100%;height:100%;position:relative;transform-style:preserve-3d;animation:rotate3d 8s ease-in-out infinite;transform:rotateY(-20deg) rotateX(10deg)}
+@keyframes rotate3d{0%{transform:rotateY(-20deg) rotateX(10deg)}25%{transform:rotateY(15deg) rotateX(5deg)}50%{transform:rotateY(25deg) rotateX(-5deg)}75%{transform:rotateY(5deg) rotateX(8deg)}100%{transform:rotateY(-20deg) rotateX(10deg)}}
+.band-3d:hover{animation-play-state:paused}
+.face{position:absolute;backface-visibility:hidden}
+.face-front{width:88px;height:220px;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(8px);background:linear-gradient(180deg,#1E1E1E 0%,#141414 50%,#111 100%);border-radius:20px;border:0.5px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;overflow:hidden}
+.face-back{width:88px;height:220px;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(-8px) rotateY(180deg);background:linear-gradient(180deg,#141414 0%,#101010 100%);border-radius:20px;border:0.5px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.face-left{width:16px;height:220px;left:50%;top:50%;transform:translate(calc(-50% + 44px),-50%) rotateY(90deg) translateZ(8px);background:linear-gradient(180deg,#1a1a1a,#111);border-radius:0 8px 8px 0}
+.face-right{width:16px;height:220px;left:50%;top:50%;transform:translate(calc(-50% - 44px),-50%) rotateY(-90deg) translateZ(8px);background:linear-gradient(180deg,#1a1a1a,#111);border-radius:8px 0 0 8px}
+.strap-top{position:absolute;width:72px;height:96px;left:50%;top:0;transform:translateX(-50%) translateZ(4px);background:repeating-linear-gradient(45deg,#1a1a1a 0px,#1a1a1a 2px,#141414 2px,#141414 4px,#1a1a1a 4px,#1a1a1a 6px,#121212 6px,#121212 8px);border-radius:10px 10px 0 0;border:0.5px solid rgba(255,255,255,0.08);overflow:hidden;transform-style:preserve-3d}
+.strap-top::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.04) 0%,transparent 60%)}
+.strap-bot{position:absolute;width:72px;height:96px;left:50%;bottom:0;transform:translateX(-50%) translateZ(4px);background:repeating-linear-gradient(45deg,#1a1a1a 0px,#1a1a1a 2px,#141414 2px,#141414 4px,#1a1a1a 4px,#1a1a1a 6px,#121212 6px,#121212 8px);border-radius:0 0 10px 10px;border:0.5px solid rgba(255,255,255,0.08);overflow:hidden}
+.strap-bot::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.4) 100%)}
+.buckle{position:absolute;top:88px;left:50%;transform:translateX(-50%) translateZ(6px);width:56px;height:20px;background:#222;border-radius:6px;border:0.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center}
+.buckle-pin{width:8px;height:14px;background:rgba(255,255,255,0.18);border-radius:2px}
+.body-highlight{width:3px;height:180px;background:linear-gradient(180deg,rgba(255,255,255,0.08),transparent);position:absolute;left:8px;top:20px;border-radius:2px}
+.body-button{width:6px;height:24px;background:#1a1a1a;border-radius:3px;border:0.5px solid rgba(255,255,255,0.1);position:absolute;right:-3px;top:50%;transform:translateY(-50%) translateZ(2px)}
+.status-led{width:5px;height:5px;border-radius:50%;background:var(--green);position:absolute;top:28%;left:50%;transform:translateX(-50%);box-shadow:0 0 8px var(--green),0 0 16px rgba(61,235,110,0.4);animation:ledPulse 2s infinite}
+@keyframes ledPulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--green),0 0 16px rgba(61,235,110,0.4)}50%{opacity:0.5;box-shadow:0 0 4px var(--green)}}
+.charging-contacts{display:flex;gap:10px;margin-bottom:4px}
+.contact-dot{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#c8a84b,#8a6e2a);border:1px solid rgba(255,215,100,0.3)}
+.sensor-housing{width:56px;height:56px;border-radius:50%;background:#0a0a0a;border:1.5px solid rgba(61,235,110,0.2);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 0 12px rgba(61,235,110,0.08)}
+.sensor-leds{position:relative;width:40px;height:40px}
+.led{position:absolute;width:8px;height:8px;background:radial-gradient(circle,#3DEB6E,#1a8a3a);border-radius:50%;box-shadow:0 0 6px rgba(61,235,110,0.8),0 0 12px rgba(61,235,110,0.4);animation:sensorGlow 1.5s ease-in-out infinite}
+.led:nth-child(1){top:0;left:50%;transform:translateX(-50%);animation-delay:0s}
+.led:nth-child(2){top:50%;right:0;transform:translateY(-50%);animation-delay:0.25s}
+.led:nth-child(3){bottom:0;left:50%;transform:translateX(-50%);animation-delay:0.5s}
+.led:nth-child(4){top:50%;left:0;transform:translateY(-50%);animation-delay:0.75s}
+.led:nth-child(5){top:20%;right:20%;animation-delay:0.1s}
+.led:nth-child(6){top:20%;left:20%;animation-delay:0.6s}
+@keyframes sensorGlow{0%,100%{opacity:1;box-shadow:0 0 6px rgba(61,235,110,0.9),0 0 12px rgba(61,235,110,0.5)}50%{opacity:0.6;box-shadow:0 0 3px rgba(61,235,110,0.5)}}
+.sensor-center-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,0.8);border:1px solid rgba(61,235,110,0.3);top:50%;left:50%;transform:translate(-50%,-50%)}
+.cert-row{display:flex;gap:6px;align-items:center}
+.cert{font-family:'DM Mono',monospace;font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:0.5px}
+
+/* ── HERO ── */
+.hero{min-height:calc(100vh - var(--nav-h));display:grid;grid-template-columns:1fr 1fr;align-items:center;max-width:1440px;margin:0 auto;padding:60px 5vw}
+.hero-left{display:flex;flex-direction:column}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--green-dim);border:0.5px solid rgba(61,235,110,0.2);border-radius:4px;padding:5px 14px;font-size:10px;letter-spacing:2.5px;color:rgba(61,235,110,0.8);margin-bottom:36px;width:fit-content;text-transform:uppercase;font-weight:500}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.tag-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite;box-shadow:0 0 6px var(--green)}
+.hero-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(68px,9.5vw,136px);line-height:0.88;letter-spacing:1px;margin-bottom:28px}
+.hero-h1 em{font-style:normal;color:var(--green);text-shadow:0 0 40px rgba(61,235,110,0.2)}
+.hero-p{font-size:clamp(14px,1.4vw,16px);color:var(--muted);line-height:1.9;max-width:460px;margin-bottom:36px}
+.hero-price-row{display:flex;align-items:baseline;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.hero-price{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,68px);color:var(--green);line-height:1}
+.hero-price-note{font-size:12px;color:var(--muted);letter-spacing:0.3px}
+.hero-form{display:flex;gap:8px;margin-bottom:14px;max-width:460px}
+.hero-form input{flex:1;background:var(--s1);border:0.5px solid var(--border2);border-radius:8px;padding:14px 16px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;min-width:0}
+.hero-form input:focus{border-color:rgba(61,235,110,0.3);box-shadow:0 0 0 3px rgba(61,235,110,0.06)}
+.hero-form input::placeholder{color:var(--muted)}
+.hero-form button{background:var(--green);color:#000;border:none;border-radius:8px;padding:14px 22px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity 0.2s,transform 0.1s;letter-spacing:0.3px}
+.hero-form button:hover{opacity:0.85}
+.hero-form button:active{transform:scale(0.98)}
+.hero-note{font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:0.2px}
+.hero-ok{font-size:13px;color:var(--green);margin-top:8px;display:none}
+.hero-right{display:flex;align-items:center;justify-content:center;position:relative;height:calc(100vh - var(--nav-h) - 120px);min-height:400px}
+.hero-right::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(480px,72vw);height:min(480px,72vw);background:radial-gradient(circle,rgba(61,235,110,0.055) 0%,transparent 65%);pointer-events:none}
+.product-real-img{position:relative;z-index:1;text-align:center}
+.product-real-img img{width:min(280px,60vw);height:auto;filter:drop-shadow(0 32px 64px rgba(0,0,0,0.8)) drop-shadow(0 0 40px rgba(61,235,110,0.08));margin:0 auto}
+.band-label{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.18);letter-spacing:3px;margin-top:20px;text-transform:uppercase}
+
+/* Floating stats */
+.fs{position:absolute;background:rgba(6,6,6,0.94);border:0.5px solid var(--border2);border-radius:12px;padding:12px 16px;backdrop-filter:blur(20px)}
+.fs-val{font-size:17px;font-weight:500;line-height:1}
+.fs-lbl{font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase}
+.fs1{top:12%;left:2%;animation:fa 4s ease-in-out infinite}
+.fs2{top:12%;right:2%;animation:fb 4s ease-in-out infinite 1s}
+.fs3{bottom:18%;left:2%;animation:fa 4s ease-in-out infinite 2s}
+.fs4{bottom:18%;right:2%;animation:fb 4s ease-in-out infinite 0.5s}
+@keyframes fa{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes fb{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ── TICKER ── */
+.ticker{border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:18px 0;overflow:hidden;white-space:nowrap;background:var(--s1)}
+.ticker-track{display:inline-flex;gap:52px;animation:tick 32s linear infinite}
+.ticker-item{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.18);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.ticker-item::before{content:'●';color:var(--green);font-size:5px;opacity:0.7}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── STATS BAR ── */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:0.5px solid var(--border)}
+.sc{padding:clamp(28px,4vw,52px) clamp(20px,4vw,64px);border-right:0.5px solid var(--border);position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(61,235,110,0.0),transparent);opacity:0;transition:opacity 0.3s}
+.sc:hover::before{opacity:1}
+.sc:last-child{border-right:none}
+.sc-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,68px);letter-spacing:1px;line-height:1}
+.sc-big.g{color:var(--green)}
+.sc-sub{font-size:10px;color:var(--muted);letter-spacing:1.8px;margin-top:8px;text-transform:uppercase}
+
+/* ── SECTION ── */
+.section{padding:clamp(60px,8vw,120px) 5vw;max-width:1440px;margin:0 auto}
+.eyebrow{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;font-weight:400}
+.big-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5.5vw,80px);letter-spacing:1px;line-height:0.93;margin-bottom:0}
+.big-title em{font-style:normal;color:var(--green)}
+.body-text{font-size:clamp(13px,1.4vw,15px);color:var(--muted);line-height:1.95;max-width:480px}
+
+/* ── PRODUCT SECTION ── */
+.prod-split{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:0;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border)}
+.prod-visual{display:flex;align-items:center;justify-content:center;padding:clamp(40px,6vw,80px);background:var(--s1);border-right:0.5px solid var(--border);min-height:400px;position:relative}
+.prod-visual::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(61,235,110,0.04) 0%,transparent 70%);pointer-events:none}
+.prod-copy{padding:clamp(40px,5vw,80px) clamp(24px,5vw,64px)}
+.spec-list{display:flex;flex-direction:column;gap:8px;margin-top:32px}
+.spec-row{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--s1);border:0.5px solid var(--border);border-radius:9px;transition:background 0.2s,border-color 0.2s}
+.spec-row:hover{background:var(--s2);border-color:var(--border2)}
+.spec-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.spec-label{font-size:11px;color:var(--muted);width:130px;flex-shrink:0;letter-spacing:0.3px}
+.spec-val{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.3px}
+
+/* ── METRICS ── */
+.m4{display:grid;grid-template-columns:repeat(4,1fr);margin-top:48px;border:0.5px solid var(--border);border-radius:16px;overflow:hidden}
+.m4c{padding:clamp(24px,3vw,40px) clamp(20px,2.5vw,32px);background:var(--s1);border-right:0.5px solid var(--border);transition:background 0.25s}
+.m4c:last-child{border-right:none}
+.m4c:hover{background:var(--s2)}
+.m4dot{width:8px;height:8px;border-radius:50%;margin-bottom:20px}
+.m4name{font-size:clamp(13px,1.3vw,16px);font-weight:500;margin-bottom:8px}
+.m4desc{font-size:clamp(11px,1vw,13px);color:var(--muted);line-height:1.8;margin-bottom:18px}
+.m4tag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.3px}
+
+/* ── HOW ── */
+.how3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:48px;border:0.5px solid var(--border);border-radius:16px;overflow:hidden}
+.h3c{padding:clamp(32px,4vw,48px) clamp(24px,3vw,40px);background:var(--s2);border-right:0.5px solid var(--border);transition:background 0.2s;position:relative}
+.h3c::after{content:'';position:absolute;bottom:0;left:clamp(24px,3vw,40px);right:clamp(24px,3vw,40px);height:1px;background:var(--green);transform:scaleX(0);transition:transform 0.3s;transform-origin:left}
+.h3c:hover::after{transform:scaleX(1)}
+.h3c:last-child{border-right:none}
+.h3c:hover{background:var(--s3)}
+.h3n{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:22px}
+.h3t{font-size:clamp(15px,1.5vw,19px);font-weight:500;margin-bottom:10px}
+.h3d{font-size:clamp(12px,1.1vw,14px);color:var(--muted);line-height:1.85}
+
+/* ── RECOVERY VISUAL ── */
+.rv-wrap{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:clamp(32px,5vw,80px);padding:clamp(60px,8vw,100px) 5vw;max-width:1440px;margin:0 auto}
+.rv-card{background:var(--s1);border:0.5px solid var(--border);border-radius:20px;padding:clamp(24px,3vw,40px);position:relative;overflow:hidden}
+.rv-glow{position:absolute;top:-50px;right:-50px;width:240px;height:240px;background:radial-gradient(circle,rgba(61,235,110,0.05) 0%,transparent 70%);pointer-events:none}
+.rv-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.rv-brand{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:5px;color:var(--text)}
+.rv-date{font-size:10px;color:var(--muted);letter-spacing:1px}
+.rv-dial-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:20px}
+.rv-lbl{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;text-transform:uppercase}
+.dial-c{position:relative;width:clamp(140px,18vw,180px);height:clamp(140px,18vw,180px)}
+.dial-c svg{transform:rotate(-135deg);width:100%;height:100%}
+.dial-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dial-num{font-size:clamp(36px,5vw,48px);font-weight:500;color:var(--green);line-height:1}
+.dial-pct{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:3px}
+.rv-row{display:flex;justify-content:space-around;padding-top:18px;border-top:0.5px solid var(--border)}
+.rv-st{text-align:center}
+.rv-sv{font-size:13px;font-weight:500}
+.rv-sl{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px}
+.rv-sleep{background:var(--s2);border-radius:12px;padding:16px;margin-top:10px}
+.rv-sleep-hd{display:flex;justify-content:space-between;margin-bottom:10px}
+.rv-sleep-l{font-size:9px;letter-spacing:2px;color:var(--muted)}
+.rv-sleep-v{font-size:12px;color:var(--blue)}
+.sleep-bar{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:1px;margin-bottom:8px}
+.sb{height:100%;border-radius:1px}
+.rv-coach{background:var(--s2);border-radius:12px;padding:14px;margin-top:10px;border:0.5px solid rgba(124,111,255,0.15)}
+.rv-ch{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.rv-cd{width:5px;height:5px;border-radius:50%;background:var(--purple)}
+.rv-cl{font-size:9px;letter-spacing:2px;color:var(--purple)}
+.rv-ct{font-size:11px;color:var(--muted);line-height:1.6}
+
+/* ── PRICING ── */
+.pricing-hero{padding:clamp(60px,8vw,100px) 5vw clamp(40px,5vw,60px);text-align:center;max-width:800px;margin:0 auto}
+.pricing-card-wrap{display:grid;grid-template-columns:1fr;gap:0;max-width:560px;margin:0 auto;padding:0 5vw clamp(60px,8vw,100px)}
+.pc{padding:clamp(36px,4vw,56px) clamp(28px,4vw,48px);background:var(--s1);border:0.5px solid var(--border);border-radius:20px}
+.pc.featured{border-color:rgba(61,235,110,0.2);background:var(--s2);box-shadow:0 0 80px rgba(61,235,110,0.04)}
+.pc-price{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,10vw,96px);line-height:1;letter-spacing:1px;color:var(--green);margin-bottom:4px}
+.pc-period{font-size:14px;color:var(--muted);margin-bottom:24px}
+.pc-divider{border:none;border-top:0.5px solid var(--border);margin:24px 0}
+.pc-list{list-style:none;display:flex;flex-direction:column;gap:14px;margin-bottom:36px}
+.pc-list li{font-size:14px;color:var(--muted);display:flex;gap:12px;align-items:flex-start}
+.pc-list li::before{content:'→';color:var(--green);flex-shrink:0;margin-top:1px}
+.pc-btn{width:100%;padding:16px;border-radius:10px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.2s,transform 0.1s;border:none;background:var(--green);color:#000;letter-spacing:0.3px}
+.pc-btn:hover{opacity:0.85}
+.pc-btn:active{transform:scale(0.99)}
+.pc-note{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.7}
+.faq-section{padding:0 5vw clamp(60px,8vw,100px);max-width:760px;margin:0 auto}
+.faq-item{border-bottom:0.5px solid var(--border);padding:20px 0;cursor:pointer}
+.faq-q{font-size:15px;font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq-icon{color:var(--muted);font-size:18px;flex-shrink:0;transition:transform 0.25s}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.85;margin-top:14px;display:none}
+.faq-item.open .faq-icon{transform:rotate(45deg);color:var(--green)}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .faq-q{color:var(--text)}
+
+/* ── SCIENCE ── */
+.science-hero{padding:clamp(60px,8vw,100px) 5vw clamp(20px,3vw,40px);max-width:1440px;margin:0 auto}
+.science-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin:clamp(32px,4vw,56px) 0;background:var(--border)}
+.sg-card{padding:clamp(28px,3.5vw,48px) clamp(24px,3vw,40px);background:var(--s1);transition:background 0.2s}
+.sg-card:hover{background:var(--s2)}
+.sg-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:16px}
+.sg-title{font-size:clamp(16px,1.8vw,22px);font-weight:500;margin-bottom:12px}
+.sg-desc{font-size:clamp(12px,1.1vw,14px);color:var(--muted);line-height:1.85}
+.sg-tag{font-family:'DM Mono',monospace;font-size:11px;margin-top:16px;letter-spacing:0.3px}
+.pipeline{display:flex;align-items:stretch;overflow-x:auto;margin:clamp(32px,4vw,56px) 5vw;border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
+.pipe-step{flex:1;min-width:100px;padding:24px 16px;background:var(--s1);text-align:center;border-right:0.5px solid var(--border);transition:background 0.2s}
+.pipe-step:last-child{border-right:none}
+.pipe-step:hover{background:var(--s2)}
+.pipe-label{font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.pipe-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--green)}
+
+/* ── CONTACT PAGE (Order) ── */
+.contact-wrap{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:calc(100vh - var(--nav-h));max-width:1440px;margin:0 auto}
+.contact-left{padding:clamp(48px,6vw,80px) clamp(24px,5vw,64px);border-right:0.5px solid var(--border)}
+.contact-right{padding:clamp(48px,6vw,80px) clamp(24px,5vw,64px);background:var(--s1)}
+.form-group{margin-bottom:20px}
+.form-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:block;font-weight:400}
+.form-input{width:100%;background:var(--bg);border:0.5px solid var(--border2);border-radius:9px;padding:13px 16px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+.form-input:focus{border-color:rgba(61,235,110,0.3);box-shadow:0 0 0 3px rgba(61,235,110,0.06)}
+.form-input::placeholder{color:var(--muted)}
+textarea.form-input{resize:vertical;min-height:100px}
+.form-btn{background:var(--green);color:#000;border:none;border-radius:9px;padding:15px 28px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.2s,transform 0.1s;width:100%;margin-top:8px;letter-spacing:0.3px}
+.form-btn:hover{opacity:0.85}
+.form-btn:active{transform:scale(0.99)}
+.contact-info{display:flex;flex-direction:column;gap:24px}
+.ci-item{display:flex;flex-direction:column;gap:6px}
+.ci-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.ci-val{font-size:14px}
+.form-ok{font-size:13px;color:var(--green);margin-top:12px;display:none;line-height:1.7}
+
+/* ── CONTACT US PAGE (new) ── */
+.contact-us-hero{padding:clamp(60px,8vw,100px) 5vw clamp(20px,3vw,40px);max-width:1440px;margin:0 auto}
+.contact-us-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,80px);padding:0 5vw clamp(60px,8vw,100px);max-width:1440px;margin:0 auto}
+.contact-form-card{background:var(--s1);border:0.5px solid var(--border);border-radius:20px;padding:clamp(32px,4vw,52px)}
+.contact-info-card{display:flex;flex-direction:column;gap:32px}
+.contact-channel{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;padding:28px 32px;transition:border-color 0.25s,background 0.2s;cursor:default}
+.contact-channel:hover{border-color:var(--border2);background:var(--s2)}
+.cc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:18px}
+.cc-title{font-size:15px;font-weight:500;margin-bottom:6px}
+.cc-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.cc-link{font-family:'DM Mono',monospace;font-size:12px;color:var(--green);text-decoration:none;letter-spacing:0.3px;transition:opacity 0.2s}
+.cc-link:hover{opacity:0.75}
+.cc-badge{display:inline-block;font-size:9px;letter-spacing:1.5px;padding:3px 10px;border-radius:3px;text-transform:uppercase;margin-top:8px;font-weight:500}
+.cc-badge.fast{background:rgba(61,235,110,0.1);color:var(--green)}
+.cc-badge.normal{background:rgba(77,166,255,0.1);color:var(--blue)}
+.office-map{background:var(--s2);border:0.5px solid var(--border);border-radius:16px;padding:28px 32px}
+.office-map-inner{background:var(--s3);border-radius:10px;height:140px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden;border:0.5px solid var(--border)}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:24px 24px}
+.map-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px}
+.map-pin-dot{width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 6px rgba(61,235,110,0.15),0 0 0 12px rgba(61,235,110,0.06);animation:pinPulse 2s infinite}
+@keyframes pinPulse{0%,100%{box-shadow:0 0 0 6px rgba(61,235,110,0.15),0 0 0 12px rgba(61,235,110,0.06)}50%{box-shadow:0 0 0 8px rgba(61,235,110,0.1),0 0 0 18px rgba(61,235,110,0.03)}}
+.map-pin-line{width:1px;height:16px;background:var(--green);opacity:0.4}
+.map-city-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--green);letter-spacing:2px;opacity:0.7}
+.office-addr{font-size:13px;color:var(--muted);line-height:1.8}
+.office-addr strong{color:var(--text);font-weight:500}
+.team-strip{padding:0 5vw clamp(60px,8vw,100px);max-width:1440px;margin:0 auto}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;border:0.5px solid var(--border);border-radius:16px;overflow:hidden;margin-top:32px}
+.team-card{padding:32px;background:var(--s1);transition:background 0.2s}
+.team-card:hover{background:var(--s2)}
+.team-avatar{width:44px;height:44px;border-radius:50%;background:var(--s3);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:16px}
+.team-name{font-size:15px;font-weight:500;margin-bottom:4px}
+.team-role{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.team-email{font-family:'DM Mono',monospace;font-size:11px;color:var(--green);text-decoration:none}
+.response-banner{margin:0 5vw;max-width:calc(1440px - 10vw);background:var(--s1);border:0.5px solid var(--border);border-radius:14px;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:clamp(40px,5vw,64px)}
+.rb-left{display:flex;align-items:center;gap:16px}
+.rb-icon{width:40px;height:40px;background:var(--green-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rb-text{font-size:13px;color:var(--muted);line-height:1.6}
+.rb-text strong{color:var(--text);font-weight:500}
+.rb-stat{text-align:right}
+.rb-big{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--green);line-height:1}
+.rb-small{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+
+/* ── PRODUCT PAGE — Band viewer ── */
+.band-viewer{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(40px,6vw,80px);background:var(--s1);border-right:0.5px solid var(--border);min-height:500px;position:relative;gap:32px}
+.band-viewer::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:350px;background:radial-gradient(circle,rgba(61,235,110,0.04) 0%,transparent 70%);pointer-events:none}
+.view-label{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.18);letter-spacing:2px;text-transform:uppercase}
+.view-tabs{display:flex;gap:6px}
+.view-tab{font-size:11px;color:var(--muted);background:var(--s2);border:0.5px solid var(--border);border-radius:5px;padding:6px 14px;cursor:pointer;transition:all 0.2s;font-family:'Instrument Sans',sans-serif}
+.view-tab.active,.view-tab:hover{color:var(--text);border-color:rgba(255,255,255,0.18);background:var(--s3)}
+.band-view{display:none;position:relative;z-index:1}
+.band-view.active{display:flex;align-items:center;justify-content:center}
+
+/* ── FOOTER ── */
+footer{border-top:0.5px solid var(--border);padding:clamp(24px,3vw,40px) 5vw;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.f-logo{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:6px;color:rgba(255,255,255,0.18)}
+.f-links{display:flex;gap:28px;flex-wrap:wrap}
+.f-links a{font-size:11px;color:var(--muted);text-decoration:none;transition:color 0.2s;letter-spacing:0.3px}
+.f-links a:hover{color:var(--text)}
+.f-copy{font-size:11px;color:rgba(255,255,255,0.13);letter-spacing:0.3px}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp 0.7s ease both}
+.d1{animation-delay:0.08s}.d2{animation-delay:0.18s}.d3{animation-delay:0.28s}.d4{animation-delay:0.38s}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:40px;padding:40px 5vw 60px}
+  .hero-right{height:360px;min-height:300px}
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  .sc:nth-child(2){border-right:none}
+  .sc:nth-child(3),.sc:nth-child(4){border-top:0.5px solid var(--border)}
+  .sc:nth-child(4){border-right:none}
+  .prod-split{grid-template-columns:1fr}
+  .band-viewer{border-right:none;border-bottom:0.5px solid var(--border)}
+  .m4{grid-template-columns:repeat(2,1fr)}
+  .m4c:nth-child(2){border-right:none}
+  .m4c:nth-child(3),.m4c:nth-child(4){border-top:0.5px solid var(--border)}
+  .m4c:nth-child(4){border-right:none}
+  .how3{grid-template-columns:1fr}
+  .h3c{border-right:none;border-bottom:0.5px solid var(--border)}
+  .h3c:last-child{border-bottom:none}
+  .rv-wrap{grid-template-columns:1fr;gap:32px}
+  .science-grid{grid-template-columns:1fr}
+  .contact-wrap{grid-template-columns:1fr}
+  .contact-left{border-right:none;border-bottom:0.5px solid var(--border)}
+  .contact-us-grid{grid-template-columns:1fr}
+  .team-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .hero-form{flex-direction:column}
+  .hero-form input,.hero-form button{width:100%}
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .m4{grid-template-columns:1fr}
+  .m4c{border-right:none!important;border-top:0.5px solid var(--border)}
+  .m4c:first-child{border-top:none}
+  .fs1,.fs3{left:-4px}
+  .fs2,.fs4{right:-4px}
+  footer{flex-direction:column;align-items:flex-start}
+  .band-scene{width:200px;height:280px}
+  .response-banner{flex-direction:column;align-items:flex-start}
+  .rb-stat{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo" onclick="showPage('home');return false">
+    <div class="nav-logo-dot"></div>APEX
+  </a>
+  <div class="nav-links">
+    <a href="#" onclick="showPage('home');return false" class="active" id="nav-home">Home</a>
+    <a href="#" onclick="showPage('product');return false" id="nav-product">Product</a>
+    <a href="#" onclick="showPage('science');return false" id="nav-science">Science</a>
+    <a href="#" onclick="showPage('pricing');return false" id="nav-pricing">Pricing</a>
+    <a href="#" onclick="showPage('contact-us');return false" id="nav-contact-us">Contact</a>
+    <a href="#" onclick="showPage('contact');return false" id="nav-contact" class="nav-cta">Order Now</a>
+  </div>
+  <div class="hamburger" onclick="toggleMenu()" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#" onclick="showPage('home');toggleMenu();return false">Home</a>
+  <a href="#" onclick="showPage('product');toggleMenu();return false">Product</a>
+  <a href="#" onclick="showPage('science');toggleMenu();return false">Science</a>
+  <a href="#" onclick="showPage('pricing');toggleMenu();return false">Pricing</a>
+  <a href="#" onclick="showPage('contact-us');toggleMenu();return false">Contact Us</a>
+  <a href="#" onclick="showPage('contact');toggleMenu();return false">Order Now</a>
+</div>
+
+<!-- ═══════ HOME ═══════ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-tag fu"><div class="tag-dot"></div>Now available in India</div>
+      <h1 class="hero-h1 fu d1">KNOW<br>YOUR<br><em>BODY.</em></h1>
+      <p class="hero-p fu d2">Recovery science for Indian athletes. Daily HRV scores, sleep staging, skin temperature — everything you need to train smarter and perform at your peak.</p>
+      <div class="hero-price-row fu d2">
+        <div class="hero-price">₹7,499</div>
+        <div class="hero-price-note">one-time · no subscription ever</div>
+      </div>
+      <div class="fu d3">
+        <div class="hero-form">
+          <input type="email" id="hero-email" placeholder="your@email.com" autocomplete="email"/>
+          <button onclick="signup('hero-email','hero-ok')">Pre-order</button>
+        </div>
+        <p class="hero-note">Free shipping · 30-day returns · Ships Q3 2025</p>
+        <p class="hero-ok" id="hero-ok">✓ You're on the list. We'll reach out soon.</p>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="fs fs1"><div class="fs-val" style="color:var(--green)">74%</div><div class="fs-lbl">Recovery</div></div>
+      <div class="fs fs2"><div class="fs-val" style="color:var(--blue)">7h 22m</div><div class="fs-lbl">Sleep</div></div>
+      <div class="fs fs3"><div class="fs-val" style="color:var(--green)">72ms</div><div class="fs-lbl">HRV</div></div>
+      <div class="fs fs4"><div class="fs-val" style="color:var(--yellow)">35.6°</div><div class="fs-lbl">Skin Temp</div></div>
+      <div class="product-real-img fu d4">
+        <img src="IMG_5296.jpeg" alt="APEX Band" onerror="this.style.display='none';document.getElementById('band-fallback').style.display='block'"/>
+        <div id="band-fallback" style="display:none">
+          <div class="band-scene"><div class="band-3d">
+            <div class="strap-top face"></div>
+            <div class="buckle face"><div class="buckle-pin"></div></div>
+            <div class="face face-front"><div class="body-highlight"></div><div class="status-led"></div><div class="body-button"></div></div>
+            <div class="face face-back"><div class="charging-contacts"><div class="contact-dot"></div><div class="contact-dot"></div></div><div class="sensor-housing"><div class="sensor-leds"><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="sensor-center-dot"></div></div></div><div class="cert-row"><span class="cert">FCC</span><span class="cert">RoHS</span><span class="cert">CE</span></div></div>
+            <div class="face face-left"></div><div class="face face-right"></div>
+            <div class="strap-bot face"></div>
+          </div></div>
+        </div>
+        <div class="band-label">APEX Band · Recovery Edition</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="ticker-track">
+      <span class="ticker-item">APEX Band</span><span class="ticker-item">Nordic NRF54L15</span><span class="ticker-item">25Hz PPG</span><span class="ticker-item">6 Photodiodes</span><span class="ticker-item">IP68 Waterproof</span><span class="ticker-item">14-Day Battery</span><span class="ticker-item">RMSSD HRV</span><span class="ticker-item">Skin Temperature</span><span class="ticker-item">Sleep Staging</span><span class="ticker-item">AI Coach</span><span class="ticker-item">No Subscription</span><span class="ticker-item">Designed in Hyderabad</span>
+      <span class="ticker-item">APEX Band</span><span class="ticker-item">Nordic NRF54L15</span><span class="ticker-item">25Hz PPG</span><span class="ticker-item">6 Photodiodes</span><span class="ticker-item">IP68 Waterproof</span><span class="ticker-item">14-Day Battery</span><span class="ticker-item">RMSSD HRV</span><span class="ticker-item">Skin Temperature</span><span class="ticker-item">Sleep Staging</span><span class="ticker-item">AI Coach</span><span class="ticker-item">No Subscription</span><span class="ticker-item">Designed in Hyderabad</span>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="sc"><div class="sc-big g">₹7,499</div><div class="sc-sub">One-time price</div></div>
+    <div class="sc"><div class="sc-big">14</div><div class="sc-sub">Day battery</div></div>
+    <div class="sc"><div class="sc-big">25Hz</div><div class="sc-sub">PPG sampling</div></div>
+    <div class="sc"><div class="sc-big g">0</div><div class="sc-sub">Subscription fees</div></div>
+  </div>
+
+  <div class="rv-wrap">
+    <div class="rv-card">
+      <div class="rv-glow"></div>
+      <div class="rv-hd"><span class="rv-brand">APEX</span><span class="rv-date">MON · 16 MARCH</span></div>
+      <div class="rv-dial-wrap">
+        <div class="rv-lbl">● Recovery</div>
+        <div class="dial-c">
+          <svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="72" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="0"/><circle cx="90" cy="90" r="72" fill="none" stroke="#3DEB6E" stroke-width="10" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="85"/></svg>
+          <div class="dial-txt"><span class="dial-num">74%</span><span class="dial-pct">OPTIMAL</span></div>
+        </div>
+      </div>
+      <div class="rv-row">
+        <div class="rv-st"><div class="rv-sv" style="color:var(--green)">72ms</div><div class="rv-sl">HRV</div></div>
+        <div class="rv-st"><div class="rv-sv">58bpm</div><div class="rv-sl">Resting HR</div></div>
+        <div class="rv-st"><div class="rv-sv" style="color:var(--yellow)">35.6°</div><div class="rv-sl">Skin Temp</div></div>
+      </div>
+      <div class="rv-sleep">
+        <div class="rv-sleep-hd"><span class="rv-sleep-l">● Sleep</span><span class="rv-sleep-v">91%</span></div>
+        <div style="font-size:clamp(22px,3vw,28px);font-weight:300;margin-bottom:10px">7h 22m</div>
+        <div class="sleep-bar"><div class="sb" style="flex:49;background:rgba(255,255,255,0.18)"></div><div class="sb" style="flex:24;background:var(--blue)"></div><div class="sb" style="flex:27;background:var(--purple)"></div></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap"><span style="font-size:10px;color:rgba(255,255,255,0.3)">Light 3h 39m</span><span style="font-size:10px;color:var(--blue)">REM 1h 55m</span><span style="font-size:10px;color:var(--purple)">Deep 1h 48m</span></div>
+      </div>
+      <div class="rv-coach">
+        <div class="rv-ch"><div class="rv-cd"></div><span class="rv-cl">APEX Coach</span></div>
+        <div class="rv-ct">Your nervous system is well-rested. Push hard today — this is a green light for intense training.</div>
+      </div>
+    </div>
+    <div>
+      <p class="eyebrow">Your morning ritual</p>
+      <h2 class="big-title" style="font-size:clamp(36px,4.5vw,64px);margin-bottom:20px">WAKE UP<br>AND <em>KNOW.</em></h2>
+      <p class="body-text" style="margin-bottom:16px">Every morning, APEX has already processed a full night of your biometric data. Your recovery score and AI coaching message are ready before you reach for your phone.</p>
+      <p class="body-text" style="margin-bottom:32px">No guessing. No generic advice. Just your data, your baseline, your day.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:36px">
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:14px;color:var(--muted)">Personalised to your 14-day baseline</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:14px;color:var(--muted)">True RMSSD HRV — not a processed estimate</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:14px;color:var(--muted)">WhatsApp digest every morning at 7am</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:14px;color:var(--muted)">Pay once. Own it forever. No subscription.</span></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button onclick="showPage('pricing')" style="background:var(--green);color:#000;border:none;border-radius:8px;padding:14px 28px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.2s">Order APEX Band →</button>
+        <button onclick="showPage('contact-us')" style="background:transparent;color:var(--muted);border:0.5px solid var(--border2);border-radius:8px;padding:14px 28px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:400;cursor:pointer;transition:all 0.2s" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border3)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">Ask a question</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--s1);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border)">
+    <div class="section">
+      <p class="eyebrow">How it works</p>
+      <h2 class="big-title">SCIENCE,<br>NOT <em>GUESSWORK.</em></h2>
+      <div class="how3">
+        <div class="h3c"><div class="h3n">01 — WEAR</div><div class="h3t">24/7 biometric tracking</div><div class="h3d">APEX Band tracks HRV, resting heart rate, skin temperature, SpO2, and all four sleep stages continuously — day and night, for 14 days on a single charge.</div></div>
+        <div class="h3c"><div class="h3n">02 — CALIBRATE</div><div class="h3t">Your personal baseline</div><div class="h3d">APEX spends 14 days learning your unique physiology. Your recovery score is benchmarked against your own body — not a population average of strangers.</div></div>
+        <div class="h3c"><div class="h3n">03 — TRAIN</div><div class="h3t">Daily coaching decisions</div><div class="h3d">Every morning you receive a recovery score and an AI coaching message telling you exactly how hard to push today — backed by your actual biometric data.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span class="f-logo">APEX</span>
+    <div class="f-links">
+      <a href="#" onclick="showPage('product');return false">Product</a>
+      <a href="#" onclick="showPage('science');return false">Science</a>
+      <a href="#" onclick="showPage('pricing');return false">Pricing</a>
+      <a href="#" onclick="showPage('contact-us');return false">Contact</a>
+    </div>
+    <span class="f-copy">© 2025 APEX · Designed in Hyderabad</span>
+  </footer>
+</div>
+
+<!-- ═══════ PRODUCT ═══════ -->
+<div class="page" id="page-product">
+  <div class="section">
+    <p class="eyebrow">The hardware</p>
+    <h2 class="big-title">APEX BAND.<br>BUILT FOR <em>PRECISION.</em></h2>
+  </div>
+  <div class="prod-split">
+    <div class="band-viewer">
+      <div class="view-tabs">
+        <div class="view-tab active" onclick="switchView('front',this)">Front</div>
+        <div class="view-tab" onclick="switchView('back',this)">Sensor</div>
+        <div class="view-tab" onclick="switchView('3d',this)">3D View</div>
+      </div>
+      <div class="band-view active" id="view-front">
+        <img src="IMG_5301.jpeg" alt="APEX Band front" style="width:min(260px,50vw);filter:drop-shadow(0 24px 48px rgba(0,0,0,0.9)) drop-shadow(0 0 30px rgba(61,235,110,0.08))" onerror="this.parentElement.innerHTML=getBandSVG()"/>
+      </div>
+      <div class="band-view" id="view-back">
+        <div style="position:relative;text-align:center">
+          <img src="IMG_5302.jpeg" alt="APEX Band sensor" style="width:min(240px,45vw);border-radius:16px;filter:drop-shadow(0 24px 48px rgba(0,0,0,0.9))" onerror="this.parentElement.innerHTML=getSensorHTML()"/>
+          <div style="margin-top:16px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px">6 GREEN LEDs · FCC · ROHS · CE</div>
+        </div>
+      </div>
+      <div class="band-view" id="view-3d">
+        <div class="band-scene"><div class="band-3d">
+          <div class="strap-top face"></div>
+          <div class="buckle face"><div class="buckle-pin"></div></div>
+          <div class="face face-front"><div class="body-highlight"></div><div class="status-led"></div><div class="body-button"></div></div>
+          <div class="face face-back"><div class="charging-contacts"><div class="contact-dot"></div><div class="contact-dot"></div></div><div class="sensor-housing"><div class="sensor-leds"><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="sensor-center-dot"></div></div></div><div class="cert-row"><span class="cert">FCC</span><span class="cert">RoHS</span><span class="cert">CE</span></div></div>
+          <div class="face face-left"></div><div class="face face-right"></div>
+          <div class="strap-bot face"></div>
+        </div></div>
+      </div>
+      <div class="view-label">Hover to pause · Click tabs to switch view</div>
+    </div>
+    <div class="prod-copy">
+      <p class="eyebrow">Technical specifications</p>
+      <h3 class="big-title" style="font-size:clamp(32px,4vw,56px);margin-bottom:16px">ENGINEERED<br>FOR <em>TRUTH.</em></h3>
+      <p class="body-text" style="margin-bottom:0">Six photodiodes. Multi-channel PPG. 25Hz sampling. The APEX Band captures raw biometric signal at the same resolution as devices costing 10x more.</p>
+      <div class="spec-list">
+        <div class="spec-row"><div class="spec-dot" style="background:var(--green)"></div><span class="spec-label">Chipset</span><span class="spec-val">Nordic NRF54L15</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--green)"></div><span class="spec-label">PPG sampling</span><span class="spec-val">25Hz continuous</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--green)"></div><span class="spec-label">Photodiodes</span><span class="spec-val">6 sensors · multi-channel</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--green)"></div><span class="spec-label">PPG channels</span><span class="spec-val">Green · Red · Infrared</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--blue)"></div><span class="spec-label">Battery life</span><span class="spec-val">14 days typical use</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--blue)"></div><span class="spec-label">Waterproof</span><span class="spec-val">IP68 certified</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--yellow)"></div><span class="spec-label">Skin temperature</span><span class="spec-val">Continuous ±0.1°C</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--yellow)"></div><span class="spec-label">Accelerometer</span><span class="spec-val">3-axis motion filter</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--purple)"></div><span class="spec-label">Connectivity</span><span class="spec-val">Bluetooth 5.3 LE</span></div>
+        <div class="spec-row"><div class="spec-dot" style="background:var(--purple)"></div><span class="spec-label">Certifications</span><span class="spec-val">FCC · RoHS · CE</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <p class="eyebrow">What APEX measures</p>
+    <h2 class="big-title">EVERY METRIC<br>THAT <em>MATTERS.</em></h2>
+    <div class="m4">
+      <div class="m4c"><div class="m4dot" style="background:var(--green)"></div><div class="m4name">Heart Rate Variability</div><div class="m4desc">RMSSD from raw PPG at 25Hz. The most clinically validated marker of recovery and autonomic nervous system health.</div><div class="m4tag" style="color:var(--green)">RMSSD · Beat-to-beat</div></div>
+      <div class="m4c"><div class="m4dot" style="background:var(--blue)"></div><div class="m4name">Sleep Staging</div><div class="m4desc">Light, Deep, and REM sleep tracked every night. Sleep performance score 0–100% every morning.</div><div class="m4tag" style="color:var(--blue)">Light · Deep · REM</div></div>
+      <div class="m4c"><div class="m4dot" style="background:var(--yellow)"></div><div class="m4name">Skin Temperature</div><div class="m4desc">Continuous overnight monitoring detects illness and inflammation before you feel it. ±0.1°C accuracy.</div><div class="m4tag" style="color:var(--yellow)">±0.1°C accuracy</div></div>
+      <div class="m4c"><div class="m4dot" style="background:var(--purple)"></div><div class="m4name">Blood Oxygen</div><div class="m4desc">Red and infrared channels measure SpO2. Tracked during sleep and on demand during workouts.</div><div class="m4tag" style="color:var(--purple)">Red + Infrared</div></div>
+    </div>
+  </div>
+  <footer>
+    <span class="f-logo">APEX</span>
+    <div class="f-links">
+      <a href="#" onclick="showPage('home');return false">Home</a>
+      <a href="#" onclick="showPage('science');return false">Science</a>
+      <a href="#" onclick="showPage('pricing');return false">Pricing</a>
+      <a href="#" onclick="showPage('contact-us');return false">Contact</a>
+    </div>
+    <span class="f-copy">© 2025 APEX · Designed in Hyderabad</span>
+  </footer>
+</div>
+
+<!-- ═══════ SCIENCE ═══════ -->
+<div class="page" id="page-science">
+  <div class="science-hero">
+    <p class="eyebrow">The science</p>
+    <h2 class="big-title">HOW APEX<br>CALCULATES <em>RECOVERY.</em></h2>
+    <p class="body-text" style="margin-top:20px;max-width:600px">Every metric APEX tracks has decades of peer-reviewed research behind it. Here's exactly how we turn raw sensor data into a number you can act on.</p>
+  </div>
+  <div style="padding:0 5vw;max-width:1440px;margin:0 auto">
+    <div class="science-grid">
+      <div class="sg-card"><div class="sg-num">01</div><div class="sg-title">Raw PPG Signal Capture</div><div class="sg-desc">The APEX Band shines green, red, and infrared light through your skin at 25Hz. The 6 photodiodes measure how much light returns, which changes with every heartbeat as blood volume fluctuates in your vessels.</div><div class="sg-tag" style="color:var(--green)">25Hz · 16-bit · 0–65535 range</div></div>
+      <div class="sg-card"><div class="sg-num">02</div><div class="sg-title">Motion Artifact Filtering</div><div class="sg-desc">The 3-axis accelerometer runs simultaneously, detecting wrist movement. Any PPG sample captured during motion is automatically discarded. Only clean, still-captured signals are processed.</div><div class="sg-tag" style="color:var(--blue)">3-axis · real-time filtering</div></div>
+      <div class="sg-card"><div class="sg-num">03</div><div class="sg-title">Beat Detection & RR Intervals</div><div class="sg-desc">APEX finds each heartbeat peak in the raw PPG waveform and measures the exact time between consecutive beats — called RR intervals — with millisecond precision.</div><div class="sg-tag" style="color:var(--yellow)">Beat-to-beat · ms precision</div></div>
+      <div class="sg-card"><div class="sg-num">04</div><div class="sg-title">RMSSD — The Gold Standard</div><div class="sg-desc">RMSSD (Root Mean Square of Successive Differences) is calculated from the RR interval sequence. It reflects your parasympathetic nervous system — your body's ability to recover. The same method used by elite sports scientists worldwide.</div><div class="sg-tag" style="color:var(--green)">RMSSD · clinically validated</div></div>
+    </div>
+  </div>
+  <div class="pipeline">
+    <div class="pipe-step"><div class="pipe-label">Sensor</div><div class="pipe-val">PPG 25Hz</div></div>
+    <div class="pipe-step"><div class="pipe-label">Filter</div><div class="pipe-val">Motion Out</div></div>
+    <div class="pipe-step"><div class="pipe-label">Detect</div><div class="pipe-val">Peaks</div></div>
+    <div class="pipe-step"><div class="pipe-label">Calculate</div><div class="pipe-val">RR Intervals</div></div>
+    <div class="pipe-step"><div class="pipe-label">Compute</div><div class="pipe-val">RMSSD</div></div>
+    <div class="pipe-step"><div class="pipe-label">Compare</div><div class="pipe-val">Your Baseline</div></div>
+    <div class="pipe-step"><div class="pipe-label">Output</div><div class="pipe-val" style="color:var(--green)">Score 0–100</div></div>
+  </div>
+  <div style="background:var(--s1);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border)">
+    <div class="section">
+      <p class="eyebrow">Why personalisation matters</p>
+      <h2 class="big-title" style="font-size:clamp(36px,5vw,64px);margin-bottom:24px">YOUR BODY.<br>YOUR <em>BASELINE.</em></h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2px;border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-top:8px">
+        <div style="padding:32px;background:var(--s2)"><div style="font-size:28px;font-weight:300;color:var(--green);margin-bottom:8px">14 days</div><div style="font-size:13px;color:var(--muted);line-height:1.7">APEX observes your HRV, resting HR, sleep, and skin temp for 14 days to establish what's normal for your body specifically.</div></div>
+        <div style="padding:32px;background:var(--s2);border-left:0.5px solid var(--border)"><div style="font-size:28px;font-weight:300;color:var(--green);margin-bottom:8px">Not averages</div><div style="font-size:13px;color:var(--muted);line-height:1.7">A 72ms HRV might be outstanding for one person and below-par for another. APEX never compares you to population averages.</div></div>
+        <div style="padding:32px;background:var(--s2);border-left:0.5px solid var(--border)"><div style="font-size:28px;font-weight:300;color:var(--green);margin-bottom:8px">Continuous</div><div style="font-size:13px;color:var(--muted);line-height:1.7">Your baseline updates as you improve. As fitness grows, the algorithm recognises your new normal and recalibrates.</div></div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <span class="f-logo">APEX</span>
+    <div class="f-links">
+      <a href="#" onclick="showPage('home');return false">Home</a>
+      <a href="#" onclick="showPage('product');return false">Product</a>
+      <a href="#" onclick="showPage('pricing');return false">Pricing</a>
+      <a href="#" onclick="showPage('contact-us');return false">Contact</a>
+    </div>
+    <span class="f-copy">© 2025 APEX · Designed in Hyderabad</span>
+  </footer>
+</div>
+
+<!-- ═══════ PRICING ═══════ -->
+<div class="page" id="page-pricing">
+  <div class="pricing-hero">
+    <p class="eyebrow">Pricing</p>
+    <h2 class="big-title">ONE PRICE.<br><em>FOREVER.</em></h2>
+    <p style="font-size:16px;color:var(--muted);margin-top:16px;line-height:1.75">Buy the APEX Band once. Get every feature, every update, every AI coaching message — forever. No monthly fees. No hidden costs. No subscription.</p>
+  </div>
+  <div class="pricing-card-wrap">
+    <div class="pc featured">
+      <div style="display:inline-block;background:rgba(61,235,110,0.08);color:var(--green);font-size:9px;letter-spacing:2.5px;padding:4px 12px;border-radius:3px;margin-bottom:20px;text-transform:uppercase;border:0.5px solid rgba(61,235,110,0.15)">Everything included</div>
+      <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">APEX Band</div>
+      <div class="pc-price">₹7,499</div>
+      <div class="pc-period">one-time · free shipping · no subscription ever</div>
+      <hr class="pc-divider"/>
+      <ul class="pc-list">
+        <li>APEX Band (14-day battery, IP68, woven strap)</li>
+        <li>Recovery score every morning</li>
+        <li>True RMSSD HRV tracking</li>
+        <li>Sleep staging — Light, Deep, REM</li>
+        <li>Skin temperature monitoring</li>
+        <li>Blood oxygen (SpO2) tracking</li>
+        <li>AI Coach — unlimited chat forever</li>
+        <li>WhatsApp digest at 7am daily</li>
+        <li>14-day personal baseline calibration</li>
+        <li>90-day trend analysis</li>
+        <li>All future app updates included</li>
+        <li>30-day money back guarantee</li>
+      </ul>
+      <button class="pc-btn" onclick="showPage('contact')">Order Now — ₹7,499</button>
+      <p class="pc-note">Free shipping across India · 5-7 business days · 1-year warranty</p>
+    </div>
+  </div>
+  <div class="faq-section">
+    <p class="eyebrow" style="margin-bottom:24px">Frequently asked questions</p>
+    <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">Is there really no subscription? <span class="faq-icon">+</span></div><div class="faq-a">Correct — zero subscription fees, ever. Pay ₹7,499 once and you get full access to every feature including AI coaching, sleep staging, HRV tracking, and all future app updates. We believe recovery science shouldn't require a monthly tax.</div></div>
+    <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">How is 14-day battery possible? <span class="faq-icon">+</span></div><div class="faq-a">The Nordic NRF54L15 chipset is specifically designed for ultra-low power operation. Combined with intelligent sampling, you get 14 days of continuous health tracking on a single charge.</div></div>
+    <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">What is the 14-day calibration period? <span class="faq-icon">+</span></div><div class="faq-a">APEX needs to learn what's normal for your specific body before it can tell you when something is off. During the first 14 days it collects your HRV, resting HR, sleep patterns, and skin temperature. After day 14 your personalised recovery score activates.</div></div>
+    <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">Does it work with iPhone and Android? <span class="faq-icon">+</span></div><div class="faq-a">Yes — the APEX app works on both iOS (iPhone) and Android. Compatible with iOS 15+ and Android 8+.</div></div>
+    <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">Is it accurate on darker skin tones? <span class="faq-icon">+</span></div><div class="faq-a">Yes. The APEX Band uses 6 photodiodes across multiple wavelengths (green, red, and infrared). Multi-channel sensing significantly improves accuracy on all skin tones, including darker Indian skin tones where single-channel sensors struggle.</div></div>
+    <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">What is the return policy? <span class="faq-icon">+</span></div><div class="faq-a">30-day money-back guarantee, no questions asked. If APEX doesn't improve your understanding of your body within 30 days, return it for a full refund.</div></div>
+  </div>
+  <footer>
+    <span class="f-logo">APEX</span>
+    <div class="f-links">
+      <a href="#" onclick="showPage('home');return false">Home</a>
+      <a href="#" onclick="showPage('product');return false">Product</a>
+      <a href="#" onclick="showPage('science');return false">Science</a>
+      <a href="#" onclick="showPage('contact-us');return false">Contact</a>
+    </div>
+    <span class="f-copy">© 2025 APEX · Designed in Hyderabad</span>
+  </footer>
+</div>
+
+<!-- ═══════ ORDER NOW ═══════ -->
+<div class="page" id="page-contact">
+  <div class="contact-wrap">
+    <div class="contact-left">
+      <p class="eyebrow" style="margin-bottom:16px">Order your band</p>
+      <h2 class="big-title" style="font-size:clamp(36px,5vw,64px);margin-bottom:24px">ORDER YOUR<br><em>APEX BAND.</em></h2>
+      <p class="body-text" style="margin-bottom:40px">Fill in your details and we'll get back to you within 24 hours to confirm your order and shipping.</p>
+      <div class="contact-info">
+        <div class="ci-item"><div class="ci-label">Price</div><div class="ci-val" style="color:var(--green);font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px">₹7,499 · One-time</div></div>
+        <div class="ci-item"><div class="ci-label">Shipping</div><div class="ci-val">Free across India · 5-7 business days</div></div>
+        <div class="ci-item"><div class="ci-label">Warranty</div><div class="ci-val">1-year manufacturer warranty</div></div>
+        <div class="ci-item"><div class="ci-label">Returns</div><div class="ci-val">30-day money-back guarantee</div></div>
+        <div class="ci-item"><div class="ci-label">Email</div><div class="ci-val">hello@apexband.in</div></div>
+      </div>
+    </div>
+    <div class="contact-right">
+      <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" placeholder="Sandeep Reddy" id="c-name"/></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" placeholder="your@email.com" id="c-email"/></div>
+      <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" placeholder="+91 98765 43210" id="c-phone"/></div>
+      <div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" placeholder="Hyderabad" id="c-city"/></div>
+      <div class="form-group"><label class="form-label">Message (optional)</label><textarea class="form-input" placeholder="Any questions..." id="c-msg"></textarea></div>
+      <button class="form-btn" onclick="submitContact()">Pre-order APEX Band — ₹7,499</button>
+      <p class="form-ok" id="contact-ok">✓ Thanks! We'll be in touch within 24 hours to confirm your order.</p>
+    </div>
+  </div>
+  <footer>
+    <span class="f-logo">APEX</span>
+    <div class="f-links">
+      <a href="#" onclick="showPage('home');return false">Home</a>
+      <a href="#" onclick="showPage('product');return false">Product</a>
+      <a href="#" onclick="showPage('science');return false">Science</a>
+      <a href="#" onclick="showPage('pricing');return false">Pricing</a>
+    </div>
+    <span class="f-copy">© 2025 APEX · Designed in Hyderabad</span>
+  </footer>
+</div>
+
+<!-- ═══════ CONTACT US ═══════ -->
+<div class="page" id="page-contact-us">
+
+  <div class="contact-us-hero">
+    <p class="eyebrow">Get in touch</p>
+    <h2 class="big-title">WE'RE HERE<br>TO <em>HELP.</em></h2>
+    <p class="body-text" style="margin-top:20px;max-width:560px">Questions about the band, shipping, accuracy, or anything else — reach out. Our team is based in Hyderabad and responds within one business day.</p>
+  </div>
+
+  <!-- Response time banner -->
+  <div class="response-banner">
+    <div class="rb-left">
+      <div class="rb-icon">⚡</div>
+      <div class="rb-text"><strong>Fast responses guaranteed.</strong><br>We reply to every message within one business day. Urgent queries answered within a few hours.</div>
+    </div>
+    <div class="rb-stat">
+      <div class="rb-big">&lt;24h</div>
+      <div class="rb-small">Response time</div>
+    </div>
+  </div>
+
+  <!-- Main contact grid -->
+  <div class="contact-us-grid">
+
+    <!-- Contact form -->
+    <div class="contact-form-card">
+      <p class="eyebrow" style="margin-bottom:20px">Send us a message</p>
+      <div class="form-group"><label class="form-label">Your Name</label><input type="text" class="form-input" placeholder="Arjun Sharma" id="cu-name"/></div>
+      <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" placeholder="your@email.com" id="cu-email"/></div>
+      <div class="form-group"><label class="form-label">Subject</label>
+        <select class="form-input" id="cu-subject" style="appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 14px center">
+          <option value="" style="background:#0f0f0f">Choose a topic...</option>
+          <option value="product" style="background:#0f0f0f">Product & Features</option>
+          <option value="order" style="background:#0f0f0f">Orders & Shipping</option>
+          <option value="returns" style="background:#0f0f0f">Returns & Warranty</option>
+          <option value="accuracy" style="background:#0f0f0f">Accuracy & Science</option>
+          <option value="app" style="background:#0f0f0f">App & Technical Support</option>
+          <option value="partnership" style="background:#0f0f0f">Partnerships & B2B</option>
+          <option value="press" style="background:#0f0f0f">Press & Media</option>
+          <option value="other" style="background:#0f0f0f">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" placeholder="Tell us what's on your mind..." id="cu-msg" style="min-height:140px"></textarea></div>
+      <button class="form-btn" onclick="submitContactUs()" id="cu-btn">Send Message</button>
+      <p class="form-ok" id="cu-ok">✓ Message received. We'll get back to you within 24 hours.</p>
+    </div>
+
+    <!-- Channels + info -->
+    <div class="contact-info-card">
+
+      <div class="contact-channel">
+        <div class="cc-icon" style="background:rgba(61,235,110,0.1)">📧</div>
+        <div class="cc-title">Email</div>
+        <div class="cc-desc">Best for detailed questions, orders, and warranty claims. We reply to every email within one business day.</div>
+        <a href="mailto:hello@apexband.in" class="cc-link">hello@apexband.in</a>
+        <div><span class="cc-badge fast">Replies in &lt;24h</span></div>
+      </div>
+
+      <div class="contact-channel">
+        <div class="cc-icon" style="background:rgba(37,211,102,0.1)">💬</div>
+        <div class="cc-title">WhatsApp</div>
+        <div class="cc-desc">Quick questions about the product, sizing, or your order? Message us on WhatsApp for a faster response.</div>
+        <a href="https://wa.me/919876543210" class="cc-link">+91 98765 43210</a>
+        <div><span class="cc-badge fast">Fastest response</span></div>
+      </div>
+
+      <div class="contact-channel">
+        <div class="cc-icon" style="background:rgba(77,166,255,0.1)">🐦</div>
+        <div class="cc-title">Social Media</div>
+        <div class="cc-desc">Follow us for launch updates, science content, and community posts. DMs open for quick queries.</div>
+        <a href="#" class="cc-link">@apexband_in</a>
+        <div><span class="cc-badge normal">Updates daily</span></div>
+      </div>
+
+      <!-- Office / location card -->
+      <div class="office-map">
+        <div class="office-map-inner">
+          <div class="map-grid"></div>
+          <div class="map-pin">
+            <div class="map-pin-dot"></div>
+            <div class="map-pin-line"></div>
+            <div class="map-city-label">HYDERABAD</div>
+          </div>
+        </div>
+        <div class="office-addr">
+          <strong>APEX Technologies</strong><br>
+          HITEC City, Madhapur<br>
+          Hyderabad, Telangana 500081<br>
+          <span style="color:var(--muted);font-size:12px;margin-top:6px;display:block">Mon–Fri · 10am–6pm IST</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Team section -->
+  <div class="team-strip">
+    <p class="eyebrow">Talk to the team</p>
+    <h3 class="big-title" style="font-size:clamp(28px,3.5vw,48px);margin-bottom:0">REAL PEOPLE,<br><em>REAL ANSWERS.</em></h3>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">👨‍💻</div>
+        <div class="team-name">Karthik Reddy</div>
+        <div class="team-role">Founder & Hardware</div>
+        <a href="mailto:karthik@apexband.in" class="team-email">karthik@apexband.in</a>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">👩‍🔬</div>
+        <div class="team-name">Priya Nair</div>
+        <div class="team-role">Science & Algorithms</div>
+        <a href="mailto:priya@apexband.in" class="team-email">priya@apexband.in</a>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">👨‍💼</div>
+        <div class="team-name">Aditya Verma</div>
+        <div class="team-role">Customer Experience</div>
+        <a href="mailto:support@apexband.in" class="team-email">support@apexband.in</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span class="f-logo">APEX</span>
+    <div class="f-links">
+      <a href="#" onclick="showPage('home');return false">Home</a>
+      <a href="#" onclick="showPage('product');return false">Product</a>
+      <a href="#" onclick="showPage('science');return false">Science</a>
+      <a href="#" onclick="showPage('pricing');return false">Pricing</a>
+      <a href="#" onclick="showPage('contact');return false">Order Now</a>
+    </div>
+    <span class="f-copy">© 2025 APEX · Designed in Hyderabad</span>
+  </footer>
+</div>
+
+<script>
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  const page=document.getElementById('page-'+name);
+  if(page)page.classList.add('active');
+  const nav=document.getElementById('nav-'+name);
+  if(nav)nav.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toggleMenu(){
+  const m=document.getElementById('mobile-menu');
+  const h=document.getElementById('hamburger');
+  m.classList.toggle('open');
+  const s=h.querySelectorAll('span');
+  if(m.classList.contains('open')){s[0].style.transform='rotate(45deg) translate(4px,5px)';s[1].style.opacity='0';s[2].style.transform='rotate(-45deg) translate(4px,-5px)'}
+  else{s.forEach(x=>{x.style.transform='';x.style.opacity=''})}
+}
+function switchView(name,tab){
+  document.querySelectorAll('.band-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  tab.classList.add('active');
+}
+function signup(inputId,successId){
+  const input=document.getElementById(inputId);
+  const ok=document.getElementById(successId);
+  const email=input.value.trim();
+  if(!email||!email.includes('@')||!email.includes('.')){input.style.borderColor='rgba(255,71,87,0.5)';input.style.boxShadow='0 0 0 3px rgba(255,71,87,0.08)';setTimeout(()=>{input.style.borderColor='';input.style.boxShadow=''},2000);return}
+  input.parentElement.style.display='none';
+  ok.style.display='block';
+}
+function submitContact(){
+  const name=document.getElementById('c-name').value.trim();
+  const email=document.getElementById('c-email').value.trim();
+  if(!name||!email||!email.includes('@'))return;
+  document.querySelector('#page-contact .form-btn').style.display='none';
+  document.getElementById('contact-ok').style.display='block';
+}
+function submitContactUs(){
+  const name=document.getElementById('cu-name').value.trim();
+  const email=document.getElementById('cu-email').value.trim();
+  const msg=document.getElementById('cu-msg').value.trim();
+  if(!name||!email||!email.includes('@')||!msg){
+    [document.getElementById('cu-name'),document.getElementById('cu-email'),document.getElementById('cu-msg')].forEach(el=>{
+      if(!el.value.trim()){el.style.borderColor='rgba(255,71,87,0.4)';el.style.boxShadow='0 0 0 3px rgba(255,71,87,0.06)';setTimeout(()=>{el.style.borderColor='';el.style.boxShadow=''},2500)}
+    });
+    return;
+  }
+  document.getElementById('cu-btn').style.display='none';
+  document.getElementById('cu-ok').style.display='block';
+}
+function toggleFaq(item){
+  const wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen)item.classList.add('open');
+}
+document.querySelectorAll('input[type=email]').forEach(inp=>{
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const btn=inp.closest('div').querySelector('button');if(btn)btn.click()}});
+});
+</script>
+</body>
+</html>
